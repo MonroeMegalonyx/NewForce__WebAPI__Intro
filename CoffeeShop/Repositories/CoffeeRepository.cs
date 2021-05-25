@@ -67,7 +67,7 @@ namespace CoffeeShop.Repositories
                 conn.Open();
                 using (var cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"SELECT Id, Title, BeanVarietyId FROM Coffee WHERE Id = @id;";
+                    cmd.CommandText = @"SELECT c.Id, c.Title as Title, c.BeanVarietyId as ForeignKey, b.[Name] as Name, b.Region as Region, b.Notes as Notes FROM Coffee c LEFT JOIN BeanVariety b on c.BeanVarietyId = b.Id WHERE c.Id=@id;";
                     cmd.Parameters.AddWithValue("@id", id);
 
                     var reader = cmd.ExecuteReader();
@@ -79,8 +79,18 @@ namespace CoffeeShop.Repositories
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
                             Title = reader.GetString(reader.GetOrdinal("Title")),
-                            BeanVarietyId = reader.GetInt32(reader.GetOrdinal("BeanVarietyId")),
+                            BeanVarietyId = reader.GetInt32(reader.GetOrdinal("ForeignKey")),
+                            BeanVariety = new BeanVariety()
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("ForeignKey")),
+                                Name = reader.GetString(reader.GetOrdinal("Name")),
+                                Region = reader.GetString(reader.GetOrdinal("Region")),
+                            }
                         };
+                        if (!reader.IsDBNull(reader.GetOrdinal("Notes")))
+                        {
+                            coffee.BeanVariety.Notes = reader.GetString(reader.GetOrdinal("Notes"));
+                        }
                     }
 
                     reader.Close();
